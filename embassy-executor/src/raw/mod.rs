@@ -535,8 +535,8 @@ impl Executor {
         super::Spawner::new(self)
     }
 
-    pub fn id(&'static self) -> *const usize {
-        &self.inner as *const usize
+    pub fn id(&'static self) -> usize {
+        &self.inner as *const SyncExecutor as usize
     }
 }
 
