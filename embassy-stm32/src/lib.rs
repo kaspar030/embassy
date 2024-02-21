@@ -222,6 +222,8 @@ macro_rules! bind_interrupts {
 }
 
 // Reexports
+#[cfg(feature = "optfield")]
+pub use _generated::OptionalPeripherals;
 pub use _generated::{peripherals, Peripherals};
 pub use embassy_hal_internal::{Peri, PeripheralType};
 #[cfg(feature = "unstable-pac")]
