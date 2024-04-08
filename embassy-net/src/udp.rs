@@ -89,7 +89,8 @@ impl<'a> UdpSocket<'a> {
         }
     }
 
-    fn with<R>(&self, f: impl FnOnce(&udp::Socket, &Interface) -> R) -> R {
+    /// Lock the stack, provide access to the underlying smoltcp UDP socket and interface
+    pub fn with<R>(&self, f: impl FnOnce(&udp::Socket, &Interface) -> R) -> R {
         self.stack.with(|i| {
             let socket = i.sockets.get::<udp::Socket>(self.handle);
             f(socket, &i.iface)
