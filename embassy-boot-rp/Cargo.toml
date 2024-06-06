@@ -23,10 +23,10 @@ target = "thumbv6m-none-eabi"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4", optional = true }
 
-embassy-sync = { version = "0.6.0", path = "../embassy-sync" }
-embassy-rp = { version = "0.1.0", path = "../embassy-rp", default-features = false }
-embassy-boot = { version = "0.2.0", path = "../embassy-boot" }
-embassy-time = { version = "0.3.1", path = "../embassy-time" }
+embassy-sync = { version = "0.6.0"}
+embassy-rp = { version = "0.1.0", default-features = false }
+embassy-boot = { version = "0.2.0"}
+embassy-time = { version = "0.3.1"}
 
 cortex-m = { version = "0.7.6" }
 cortex-m-rt = { version = "0.7" }
