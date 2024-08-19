@@ -15,8 +15,8 @@ documentation = "https://docs.embassy.dev/cyw43-pio"
 overclock = []
 
 [dependencies]
-cyw43 = { version = "0.2.0", path = "../cyw43" }
-embassy-rp = { version = "0.2.0", path = "../embassy-rp" }
+cyw43 = { version = "0.2.0"}
+embassy-rp = { version = "0.2.0"}
 pio-proc = "0.2"
 pio = "0.2.1"
 fixed = "1.23.1"
