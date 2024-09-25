@@ -33,7 +33,7 @@ pub(crate) unsafe fn from_task(p: TaskRef) -> Waker {
 /// Panics if the waker is not created by the Embassy executor.
 pub fn task_from_waker(waker: &Waker) -> TaskRef {
     let (vtable, data) = {
-        #[cfg(not(feature = "nightly"))]
+        #[cfg(any(not(feature = "nightly"), context = "xtensa"))]
         {
             struct WakerHack {
                 data: *const (),
@@ -48,7 +48,7 @@ pub fn task_from_waker(waker: &Waker) -> TaskRef {
             (hack.vtable, hack.data)
         }
 
-        #[cfg(feature = "nightly")]
+        #[cfg(all(feature = "nightly", not(context = "xtensa")))]
         {
             (waker.vtable(), waker.data())
         }
