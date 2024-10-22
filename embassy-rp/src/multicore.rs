@@ -295,7 +295,9 @@ pub fn pause_core1() {
                     break;
                 }
                 #[cfg(feature = "fifo-handler")]
-                handle_fifo_token(token);
+                unsafe {
+                    handle_fifo_token(token);
+                }
             }
         })
     }
@@ -313,7 +315,9 @@ pub fn resume_core1() {
                     break;
                 }
                 #[cfg(feature = "fifo-handler")]
-                handle_fifo_token(token);
+                unsafe {
+                    handle_fifo_token(token);
+                }
             }
         })
     }
