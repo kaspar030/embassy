@@ -10,6 +10,9 @@ use crate::util::ctxt::Ctxt;
 struct Args {
     #[darling(default)]
     pool_size: Option<syn::Expr>,
+    /// Use this to override the `embassy_executor` crate. Defaults to `::embassy_executor`.
+    #[darling(default)]
+    embassy_executor: Option<syn::Expr>,
 }
 
 pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStream> {
@@ -19,6 +22,11 @@ pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStre
         attrs: vec![],
         lit: Lit::Int(LitInt::new("1", Span::call_site())),
     }));
+
+    use std::str::FromStr;
+    let embassy_executor = args
+        .embassy_executor
+        .unwrap_or(Expr::Verbatim(TokenStream::from_str("::embassy_executor").unwrap()));
 
     let ctxt = Ctxt::new();
 
@@ -92,7 +100,7 @@ pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStre
 
     #[cfg(feature = "nightly")]
     let mut task_outer: ItemFn = parse_quote! {
-        #visibility fn #task_ident(#fargs) -> ::embassy_executor::SpawnToken<impl Sized> {
+        #visibility fn #task_ident(#fargs) -> #embassy_executor::SpawnToken<impl Sized> {
             trait _EmbassyInternalTaskTrait {
                 type Fut: ::core::future::Future + 'static;
                 fn construct(#fargs) -> Self::Fut;
@@ -106,15 +114,15 @@ pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStre
             }
 
             const POOL_SIZE: usize = #pool_size;
-            static POOL: ::embassy_executor::raw::TaskPool<<() as _EmbassyInternalTaskTrait>::Fut, POOL_SIZE> = ::embassy_executor::raw::TaskPool::new();
+            static POOL: #embassy_executor::raw::TaskPool<<() as _EmbassyInternalTaskTrait>::Fut, POOL_SIZE> = #embassy_executor::raw::TaskPool::new();
             unsafe { POOL._spawn_async_fn(move || <() as _EmbassyInternalTaskTrait>::construct(#(#full_args,)*)) }
         }
     };
     #[cfg(not(feature = "nightly"))]
     let mut task_outer: ItemFn = parse_quote! {
-        #visibility fn #task_ident(#fargs) -> ::embassy_executor::SpawnToken<impl Sized> {
+        #visibility fn #task_ident(#fargs) -> #embassy_executor::SpawnToken<impl Sized> {
             const POOL_SIZE: usize = #pool_size;
-            static POOL: ::embassy_executor::_export::TaskPoolRef = ::embassy_executor::_export::TaskPoolRef::new();
+            static POOL: #embassy_executor::_export::TaskPoolRef = #embassy_executor::_export::TaskPoolRef::new();
             unsafe { POOL.get::<_, POOL_SIZE>()._spawn_async_fn(move || #task_inner_ident(#(#full_args,)*)) }
         }
     };
