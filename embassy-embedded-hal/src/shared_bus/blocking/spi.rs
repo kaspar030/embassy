@@ -21,8 +21,8 @@ use core::cell::RefCell;
 
 use embassy_sync::blocking_mutex::raw::RawMutex;
 use embassy_sync::blocking_mutex::Mutex;
-use embedded_hal_1::digital::OutputPin;
-use embedded_hal_1::spi::{self, Operation, SpiBus};
+use embedded_hal::digital::OutputPin;
+use embedded_hal::spi::{self, Operation, SpiBus};
 
 use crate::shared_bus::SpiDeviceError;
 use crate::SetConfig;
@@ -48,14 +48,14 @@ where
     type Error = SpiDeviceError<BUS::Error, CS::Error>;
 }
 
-impl<BUS, M, CS, Word> embedded_hal_1::spi::SpiDevice<Word> for SpiDevice<'_, M, BUS, CS>
+impl<BUS, M, CS, Word> embedded_hal::spi::SpiDevice<Word> for SpiDevice<'_, M, BUS, CS>
 where
     M: RawMutex,
     BUS: SpiBus<Word>,
     CS: OutputPin,
     Word: Copy + 'static,
 {
-    fn transaction(&mut self, operations: &mut [embedded_hal_1::spi::Operation<'_, Word>]) -> Result<(), Self::Error> {
+    fn transaction(&mut self, operations: &mut [embedded_hal::spi::Operation<'_, Word>]) -> Result<(), Self::Error> {
         if cfg!(not(feature = "time")) && operations.iter().any(|op| matches!(op, Operation::DelayNs(_))) {
             return Err(SpiDeviceError::DelayNotSupported);
         }
@@ -123,14 +123,14 @@ where
     type Error = SpiDeviceError<BUS::Error, CS::Error>;
 }
 
-impl<BUS, M, CS, Word> embedded_hal_1::spi::SpiDevice<Word> for SpiDeviceWithConfig<'_, M, BUS, CS>
+impl<BUS, M, CS, Word> embedded_hal::spi::SpiDevice<Word> for SpiDeviceWithConfig<'_, M, BUS, CS>
 where
     M: RawMutex,
     BUS: SpiBus<Word> + SetConfig,
     CS: OutputPin,
     Word: Copy + 'static,
 {
-    fn transaction(&mut self, operations: &mut [embedded_hal_1::spi::Operation<'_, Word>]) -> Result<(), Self::Error> {
+    fn transaction(&mut self, operations: &mut [embedded_hal::spi::Operation<'_, Word>]) -> Result<(), Self::Error> {
         if cfg!(not(feature = "time")) && operations.iter().any(|op| matches!(op, Operation::DelayNs(_))) {
             return Err(SpiDeviceError::DelayNotSupported);
         }

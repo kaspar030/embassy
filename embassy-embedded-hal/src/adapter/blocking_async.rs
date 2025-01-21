@@ -19,18 +19,18 @@ impl<T> BlockingAsync<T> {
 //
 // I2C implementations
 //
-impl<T, E> embedded_hal_1::i2c::ErrorType for BlockingAsync<T>
+impl<T, E> embedded_hal::i2c::ErrorType for BlockingAsync<T>
 where
-    E: embedded_hal_1::i2c::Error + 'static,
-    T: embedded_hal_1::i2c::I2c<Error = E>,
+    E: embedded_hal::i2c::Error + 'static,
+    T: embedded_hal::i2c::I2c<Error = E>,
 {
     type Error = E;
 }
 
 impl<T, E> embedded_hal_async::i2c::I2c for BlockingAsync<T>
 where
-    E: embedded_hal_1::i2c::Error + 'static,
-    T: embedded_hal_1::i2c::I2c<Error = E>,
+    E: embedded_hal::i2c::Error + 'static,
+    T: embedded_hal::i2c::I2c<Error = E>,
 {
     async fn read(&mut self, address: u8, read: &mut [u8]) -> Result<(), Self::Error> {
         self.wrapped.read(address, read)
@@ -47,7 +47,7 @@ where
     async fn transaction(
         &mut self,
         address: u8,
-        operations: &mut [embedded_hal_1::i2c::Operation<'_>],
+        operations: &mut [embedded_hal::i2c::Operation<'_>],
     ) -> Result<(), Self::Error> {
         self.wrapped.transaction(address, operations)
     }
@@ -60,15 +60,15 @@ where
 impl<T, E> embedded_hal_async::spi::ErrorType for BlockingAsync<T>
 where
     E: embedded_hal_async::spi::Error,
-    T: embedded_hal_1::spi::SpiBus<Error = E>,
+    T: embedded_hal::spi::SpiBus<Error = E>,
 {
     type Error = E;
 }
 
 impl<T, E> embedded_hal_async::spi::SpiBus<u8> for BlockingAsync<T>
 where
-    E: embedded_hal_1::spi::Error + 'static,
-    T: embedded_hal_1::spi::SpiBus<Error = E>,
+    E: embedded_hal::spi::Error + 'static,
+    T: embedded_hal::spi::SpiBus<Error = E>,
 {
     async fn flush(&mut self) -> Result<(), Self::Error> {
         Ok(())
