@@ -75,48 +75,6 @@ where
     }
 }
 
-impl<'a, M, BUS, E> embedded_hal_02::blocking::i2c::Write for I2cDevice<'_, M, BUS>
-where
-    M: RawMutex,
-    BUS: embedded_hal_02::blocking::i2c::Write<Error = E>,
-{
-    type Error = I2cDeviceError<E>;
-
-    fn write<'w>(&mut self, addr: u8, bytes: &'w [u8]) -> Result<(), Self::Error> {
-        self.bus
-            .lock(|bus| bus.borrow_mut().write(addr, bytes).map_err(I2cDeviceError::I2c))
-    }
-}
-
-impl<'a, M, BUS, E> embedded_hal_02::blocking::i2c::Read for I2cDevice<'_, M, BUS>
-where
-    M: RawMutex,
-    BUS: embedded_hal_02::blocking::i2c::Read<Error = E>,
-{
-    type Error = I2cDeviceError<E>;
-
-    fn read<'w>(&mut self, addr: u8, bytes: &'w mut [u8]) -> Result<(), Self::Error> {
-        self.bus
-            .lock(|bus| bus.borrow_mut().read(addr, bytes).map_err(I2cDeviceError::I2c))
-    }
-}
-
-impl<'a, M, BUS, E> embedded_hal_02::blocking::i2c::WriteRead for I2cDevice<'_, M, BUS>
-where
-    M: RawMutex,
-    BUS: embedded_hal_02::blocking::i2c::WriteRead<Error = E>,
-{
-    type Error = I2cDeviceError<E>;
-
-    fn write_read<'w>(&mut self, addr: u8, bytes: &'w [u8], buffer: &'w mut [u8]) -> Result<(), Self::Error> {
-        self.bus.lock(|bus| {
-            bus.borrow_mut()
-                .write_read(addr, bytes, buffer)
-                .map_err(I2cDeviceError::I2c)
-        })
-    }
-}
-
 /// I2C device on a shared bus, with its own configuration.
 ///
 /// This is like [`I2cDevice`], with an additional bus configuration that's applied
