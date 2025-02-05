@@ -198,6 +198,15 @@ impl Config {
         }
     }
 
+    /// IPv6 configuration with SLAAC.
+    #[cfg(feature = "proto-ipv6")]
+    pub const fn ipv6_slaac() -> Self {
+        Self {
+            #[cfg(feature = "proto-ipv4")]
+            ipv4: ConfigV4::None,
+            ipv6: ConfigV6::Slaac,
+        }
+    }
     /// IPv4 configuration with dynamic addressing.
     ///
     /// # Example
@@ -238,6 +247,8 @@ pub enum ConfigV6 {
     None,
     /// Use a static IPv6 address configuration.
     Static(StaticConfigV6),
+    /// Use SLAAC
+    Slaac
 }
 
 /// Network stack runner.
@@ -271,6 +282,8 @@ pub(crate) struct Inner {
     static_v4: Option<StaticConfigV4>,
     #[cfg(feature = "proto-ipv6")]
     static_v6: Option<StaticConfigV6>,
+    #[cfg(feature = "proto-ipv6")]
+    slaac: bool,
     #[cfg(feature = "dhcpv4")]
     dhcp_socket: Option<SocketHandle>,
     #[cfg(feature = "dns")]
@@ -296,13 +309,12 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
     let mut iface_cfg = smoltcp::iface::Config::new(hardware_address);
     iface_cfg.random_seed = random_seed;
 
-    // TODO slaac
-    let ll_prefix = Ipv6Cidr::new(Ipv6Cidr::LINK_LOCAL_PREFIX.address(), 64);
-    let link_local_ip_addr =
-    Ipv6Cidr::from_link_prefix(&ll_prefix, hardware_address).unwrap();
-    iface_cfg.slaac = true;
+    match config.ipv6 {
+        ConfigV6::Slaac => iface_cfg.slaac = true,
+        _ => (),
+    }
 
-    let mut iface = Interface::new(
+    let iface = Interface::new(
         iface_cfg,
         &mut DriverAdapter {
             inner: &mut driver,
@@ -311,11 +323,6 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
         },
         instant_to_smoltcp(Instant::now()),
     );
-
-    // TODO: slaac
-    iface.update_ip_addrs(|ip_addrs| {
-        ip_addrs.push(IpCidr::Ipv6(link_local_ip_addr)).unwrap();
-    });
 
     unsafe fn transmute_slice<T>(x: &mut [T]) -> &'static mut [T] {
         core::mem::transmute(x)
@@ -347,6 +354,8 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
         static_v4: None,
         #[cfg(feature = "proto-ipv6")]
         static_v6: None,
+        #[cfg(feature = "proto-ipv6")]
+        slaac: false,
         #[cfg(feature = "dhcpv4")]
         dhcp_socket: None,
         #[cfg(feature = "dns")]
@@ -721,8 +730,14 @@ impl Inner {
 
     #[cfg(feature = "proto-ipv6")]
     pub fn set_config_v6(&mut self, config: ConfigV6) {
+        self.slaac = match config {
+            ConfigV6::Slaac => true,
+            _ => false,
+        };
+
         self.static_v6 = match config {
             ConfigV6::None => None,
+            ConfigV6::Slaac => None,
             ConfigV6::Static(c) => Some(c),
         };
     }
@@ -766,7 +781,15 @@ impl Inner {
                 info!("   DNS server:      {:?}", s);
                 unwrap!(dns_servers.push(s.clone().into()).ok());
             }
-        } else {
+        } else if self.slaac {
+            info!("IPv6: UP (slaac)");
+            let ll_prefix = Ipv6Cidr::new(Ipv6Cidr::LINK_LOCAL_PREFIX.address(), 64);
+            let link_local_ip_addr =
+            Ipv6Cidr::from_link_prefix(&ll_prefix, self.hardware_address).unwrap();
+            addrs.push(IpCidr::Ipv6(link_local_ip_addr)).unwrap();
+            info!("   link local address:      {:?}", link_local_ip_addr);
+        }
+        else {
             info!("IPv6: DOWN");
         }
 
