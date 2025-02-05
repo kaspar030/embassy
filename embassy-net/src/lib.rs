@@ -295,6 +295,7 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
     let (hardware_address, medium) = to_smoltcp_hardware_address(driver.hardware_address());
     let mut iface_cfg = smoltcp::iface::Config::new(hardware_address);
     iface_cfg.random_seed = random_seed;
+    iface_cfg.slaac = true;
 
     let iface = Interface::new(
         iface_cfg,
