@@ -295,9 +295,14 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
     let (hardware_address, medium) = to_smoltcp_hardware_address(driver.hardware_address());
     let mut iface_cfg = smoltcp::iface::Config::new(hardware_address);
     iface_cfg.random_seed = random_seed;
+
+    // TODO slaac
+    let ll_prefix = Ipv6Cidr::new(Ipv6Cidr::LINK_LOCAL_PREFIX.address(), 64);
+    let link_local_ip_addr =
+    Ipv6Cidr::from_link_prefix(&ll_prefix, hardware_address).unwrap();
     iface_cfg.slaac = true;
 
-    let iface = Interface::new(
+    let mut iface = Interface::new(
         iface_cfg,
         &mut DriverAdapter {
             inner: &mut driver,
@@ -306,6 +311,11 @@ pub fn new<'d, D: Driver, const SOCK: usize>(
         },
         instant_to_smoltcp(Instant::now()),
     );
+
+    // TODO: slaac
+    iface.update_ip_addrs(|ip_addrs| {
+        ip_addrs.push(IpCidr::Ipv6(link_local_ip_addr)).unwrap();
+    });
 
     unsafe fn transmute_slice<T>(x: &mut [T]) -> &'static mut [T] {
         core::mem::transmute(x)
