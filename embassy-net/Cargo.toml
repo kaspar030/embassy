@@ -65,7 +65,7 @@ multicast = ["smoltcp/multicast"]
 defmt = { version = "0.3.8", optional = true }
 log = { version = "0.4.14", optional = true }
 
-smoltcp = { version = "0.12.0", default-features = false, features = [
+smoltcp = { git = "https://github.com/ariel-os/smoltcp", rev = "39738778a3e1e3e2d8210d6e3eda827666cae079", default-features = false, features = [
   "socket",
   "async",
 ] }
